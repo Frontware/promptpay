@@ -31,14 +31,14 @@ const (
 
 // Payment is the payment definition
 type Payment struct {
-	Amount              float32
-	Country             string
-	Currency            string
-	transactionCurrency string // ISO 4267
-	OneTime             bool   // One time payment type
-	Account             string // Can be tax id, phone number or personal id card
-	Version             string // Default is 000201
-	QRCodeQuality       qrcode.RecoveryLevel
+	Amount              float32              // Default is 0
+	Country             string               // Default is TH
+	Currency            string               // Default is THB
+	transactionCurrency string               // ISO 4267
+	OneTime             bool                 // One time payment type
+	Account             string               // Can be tax id, phone number or personal id card
+	Version             string               // Default is 000201
+	QRCodeQuality       qrcode.RecoveryLevel // Default is HIGH
 }
 
 // NewPayment initialize new payment struct with default values for THB payment in Thailand
