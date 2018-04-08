@@ -10,12 +10,13 @@ import (
 )
 
 type Payment struct {
-	Amount   float32
-	Country  string
-	Currency string
-	OneTime  bool
-	Account  string
-	Version  string
+	Amount              float32
+	Country             string
+	Currency            string
+	transactionCurrency string // ISO 4267
+	OneTime             bool
+	Account             string
+	Version             string
 }
 
 const ID_PAYLOAD_FORMAT = "00"
@@ -40,11 +41,25 @@ const COUNTRY_CODE_TH = "TH"
 // NewPayment initialize new payment struct with default values
 func NewPayment() (payment Payment) {
 	payment = Payment{
-		Currency: "THB",
-		Country:  COUNTRY_CODE_TH,
-		Version:  "000201",
+		Currency:            "THB",
+		Country:             COUNTRY_CODE_TH,
+		transactionCurrency: TRANSACTION_CURRENCY_THB,
+		Version:             "000201",
 	}
 	return
+}
+
+var iso4217 map[string]string // https://en.wikipedia.org/wiki/ISO_4217
+
+func init() {
+	iso4217 = make(map[string]string)
+	iso4217 = map[string]string{"THB": "764", "EUR": "978"}
+}
+
+// SetCurrency set currency iso code
+func (p *Payment) SetCurrency(currency string) {
+	currency = strings.ToUpper(currency)
+	p.transactionCurrency = iso4217[currency]
 }
 
 func f(id string, value string) string {
@@ -102,7 +117,7 @@ func (p Payment) String() string {
 	merchantInfo := serialize([]string{f(MERCHANT_INFORMATION_TEMPLATE_ID_GUID, GUID_PROMPTPAY), f(targetType, formatTarget(target))})
 	data = append(data, f(ID_MERCHANT_INFORMATION_BOT, merchantInfo))
 	data = append(data, f(ID_COUNTRY_CODE, COUNTRY_CODE_TH))
-	data = append(data, f(ID_TRANSACTION_CURRENCY, TRANSACTION_CURRENCY_THB))
+	data = append(data, f(ID_TRANSACTION_CURRENCY, p.transactionCurrency))
 	data = append(data, f(ID_PAYLOAD_FORMAT, PAYLOAD_FORMAT_EMV_QRCPS_MERCHANT_PRESENTED_MODE))
 	if p.Amount != 0 {
 		data = append(data, f(ID_TRANSACTION_AMOUNT, formatAmount(p.Amount)))
@@ -114,6 +129,7 @@ func (p Payment) String() string {
 	return serialize(data)
 }
 
+// QRCode returns png as []byte
 func (p *Payment) QRCode() (png []byte, err error) {
 	png, err = qrcode.Encode(p.String(), qrcode.High, 512)
 	return
