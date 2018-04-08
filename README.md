@@ -37,7 +37,7 @@ func main() {
 
 ### API
 
-https://godoc.org/github.com/Frontware/promptpay
+[![GoDoc](https://godoc.org/github.com/Frontware/promptpay?status.svg)](https://godoc.org/github.com/Frontware/promptpay)
 
 ### Specifications
 
