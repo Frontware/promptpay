@@ -21,19 +21,15 @@ Golang API to generate QRCode
 ```golang
 
 import pp "github.com/Frontware/promptpay"
-// Example code for godoc
+
 func main() {
-
-	myPayment := pp.NewPayment()
-	myPayment.Amount = 45.10 // THB
-	myPayment.Account = "0105540087061"
-	qrcode := myPayment.String()
-	fmt.Println("QRCode string ", qrcode)
-
-	// Output:
-	// QRCode string
-}
-
+    // Default values are Thailand and THB
+    myPayment := pp.NewPayment()
+    myPayment.Amount = 45.10 // THB
+    // Set a tax ID, can be phone number or thai citizen ID
+    myPayment.Account = "0105540087061" 
+    qrcode := myPayment.String()
+    fmt.Println("QRCode string ", qrcode)
 
 ```
 
