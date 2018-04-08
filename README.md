@@ -1,4 +1,4 @@
-![logo](https://www.ceoblog.co/wp-content/uploads/2017/10/PromptPay.jpg)
+![logo](https://vgy.me/i0c6tm.jpg)
 
 # PromptPay
 
