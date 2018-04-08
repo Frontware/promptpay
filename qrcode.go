@@ -13,10 +13,10 @@ const (
 	idPayloadFormat                                  = "00"
 	idPOIMethod                                      = "01"
 	idMerchantInformationBOT                         = "29"
-	ID_TRANSACTION_CURRENCY                          = "53"
-	ID_TRANSACTION_AMOUNT                            = "54"
-	ID_COUNTRY_CODE                                  = "58"
-	ID_CRC                                           = "63"
+	idTransactionCurrency                            = "53"
+	idTransactionAmount                              = "54"
+	idCountryCode                                    = "58"
+	idCRC                                            = "63"
 	PAYLOAD_FORMAT_EMV_QRCPS_MERCHANT_PRESENTED_MODE = "01"
 	POI_METHOD_STATIC                                = "11"
 	POI_METHOD_DYNAMIC                               = "12"
@@ -24,9 +24,9 @@ const (
 	BOT_ID_MERCHANT_PHONE_NUMBER                     = "01"
 	BOT_ID_MERCHANT_TAX_ID                           = "02"
 	BOT_ID_MERCHANT_EWALLET_ID                       = "03"
-	GUID_PROMPTPAY                                   = "A000000677010111"
-	TRANSACTION_CURRENCY_THB                         = "764"
-	COUNTRY_CODE_TH                                  = "TH"
+	guidPromptpay                                    = "A000000677010111"
+	transactionCurrencyTHB                           = "764"
+	countryCodeTH                                    = "TH"
 )
 
 // Payment is the payment definition
@@ -35,17 +35,17 @@ type Payment struct {
 	Country             string
 	Currency            string
 	transactionCurrency string // ISO 4267
-	OneTime             bool
+	OneTime             bool   // One time payment type
 	Account             string // Can be tax id, phone number or personal id card
-	Version             string
+	Version             string // Default is 000201
 }
 
 // NewPayment initialize new payment struct with default values for THB payment in Thailand
 func NewPayment() (payment Payment) {
 	payment = Payment{
 		Currency:            "THB",
-		Country:             COUNTRY_CODE_TH,
-		transactionCurrency: TRANSACTION_CURRENCY_THB,
+		Country:             countryCodeTH,
+		transactionCurrency: transactionCurrencyTHB,
 		Version:             "000201",
 	}
 	return
@@ -120,18 +120,18 @@ func (p Payment) String() string {
 	} else {
 		data = append(data, f(idPOIMethod, POI_METHOD_STATIC))
 	}
-	merchantInfo := serialize([]string{f(MERCHANT_INFORMATION_TEMPLATE_ID_GUID, GUID_PROMPTPAY), f(targetType, formatTarget(target))})
+	merchantInfo := serialize([]string{f(MERCHANT_INFORMATION_TEMPLATE_ID_GUID, guidPromptpay), f(targetType, formatTarget(target))})
 	data = append(data, f(idMerchantInformationBOT, merchantInfo))
-	data = append(data, f(ID_COUNTRY_CODE, COUNTRY_CODE_TH))
-	data = append(data, f(ID_TRANSACTION_CURRENCY, p.transactionCurrency))
+	data = append(data, f(idCountryCode, countryCodeTH))
+	data = append(data, f(idTransactionCurrency, p.transactionCurrency))
 	data = append(data, f(idPayloadFormat, PAYLOAD_FORMAT_EMV_QRCPS_MERCHANT_PRESENTED_MODE))
 	if p.Amount != 0 {
-		data = append(data, f(ID_TRANSACTION_AMOUNT, formatAmount(p.Amount)))
+		data = append(data, f(idTransactionAmount, formatAmount(p.Amount)))
 	}
 
-	dataToCrc := fmt.Sprintf("%s%s%s", serialize(data), ID_CRC, "04")
+	dataToCrc := fmt.Sprintf("%s%s%s", serialize(data), idCRC, "04")
 	crcValue := crc.CalculateCRC(crc.CCITT, []byte(dataToCrc))
-	data = append(data, f(ID_CRC, formatCrc(crcValue)))
+	data = append(data, f(idCRC, formatCrc(crcValue)))
 	return serialize(data)
 }
 
