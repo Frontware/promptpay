@@ -10,23 +10,23 @@ import (
 )
 
 const (
-	idPayloadFormat                             = "00"
-	idPOIMethod                                 = "01"
-	idMerchantInformationBOT                    = "29"
-	idTransactionCurrency                       = "53"
-	idTransactionAmount                         = "54"
-	idCountryCode                               = "58"
-	idCRC                                       = "63"
-	payloadFormatEMVQRCPS_MerchantPresentedMode = "01"
-	poiMethodStatic                             = "11"
-	poiMathodDynamic                            = "12"
-	merchantInformationTemplateIDGUID           = "00"
-	botIDMerchantPhoneNumber                    = "01"
-	botIDerchantTaxID                           = "02"
-	botIDMerchantEwalletID                      = "03"
-	guidPromptpay                               = "A000000677010111"
-	transactionCurrencyTHB                      = "764"
-	countryCodeTH                               = "TH"
+	idPayloadFormat                            = "00"
+	idPOIMethod                                = "01"
+	idMerchantInformationBOT                   = "29"
+	idTransactionCurrency                      = "53"
+	idTransactionAmount                        = "54"
+	idCountryCode                              = "58"
+	idCRC                                      = "63"
+	payloadFormatEMVQRCPSmerchantPresentedMode = "01"
+	poiMethodStatic                            = "11"
+	poiMathodDynamic                           = "12"
+	merchantInformationTemplateIDGUID          = "00"
+	botIDMerchantPhoneNumber                   = "01"
+	botIDerchantTaxID                          = "02"
+	botIDMerchantEwalletID                     = "03"
+	guidPromptpay                              = "A000000677010111"
+	transactionCurrencyTHB                     = "764"
+	countryCodeTH                              = "TH"
 )
 
 // Payment is the payment definition
@@ -38,6 +38,7 @@ type Payment struct {
 	OneTime             bool   // One time payment type
 	Account             string // Can be tax id, phone number or personal id card
 	Version             string // Default is 000201
+	QRCodeQuality       qrcode.RecoveryLevel
 }
 
 // NewPayment initialize new payment struct with default values for THB payment in Thailand
@@ -47,6 +48,7 @@ func NewPayment() (payment Payment) {
 		Country:             countryCodeTH,
 		transactionCurrency: transactionCurrencyTHB,
 		Version:             "000201",
+		QRCodeQuality:       qrcode.High,
 	}
 	return
 }
@@ -114,7 +116,7 @@ func (p Payment) String() string {
 	}
 
 	var data []string
-	data = append(data, f(idPayloadFormat, payloadFormatEMVQRCPS_MerchantPresentedMode))
+	data = append(data, f(idPayloadFormat, payloadFormatEMVQRCPSmerchantPresentedMode))
 	if p.Amount != 0 {
 		data = append(data, f(idPOIMethod, poiMathodDynamic))
 	} else {
@@ -124,7 +126,7 @@ func (p Payment) String() string {
 	data = append(data, f(idMerchantInformationBOT, merchantInfo))
 	data = append(data, f(idCountryCode, countryCodeTH))
 	data = append(data, f(idTransactionCurrency, p.transactionCurrency))
-	data = append(data, f(idPayloadFormat, payloadFormatEMVQRCPS_MerchantPresentedMode))
+	data = append(data, f(idPayloadFormat, payloadFormatEMVQRCPSmerchantPresentedMode))
 	if p.Amount != 0 {
 		data = append(data, f(idTransactionAmount, formatAmount(p.Amount)))
 	}
@@ -137,6 +139,6 @@ func (p Payment) String() string {
 
 // QRCode returns png as []byte
 func (p *Payment) QRCode() (png []byte, err error) {
-	png, err = qrcode.Encode(p.String(), qrcode.High, 512)
+	png, err = qrcode.Encode(p.String(), p.QRCodeQuality, 512)
 	return
 }
