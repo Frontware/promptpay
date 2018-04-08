@@ -10,23 +10,23 @@ import (
 )
 
 const (
-	idPayloadFormat                                  = "00"
-	idPOIMethod                                      = "01"
-	idMerchantInformationBOT                         = "29"
-	idTransactionCurrency                            = "53"
-	idTransactionAmount                              = "54"
-	idCountryCode                                    = "58"
-	idCRC                                            = "63"
-	PAYLOAD_FORMAT_EMV_QRCPS_MERCHANT_PRESENTED_MODE = "01"
-	POI_METHOD_STATIC                                = "11"
-	POI_METHOD_DYNAMIC                               = "12"
-	MERCHANT_INFORMATION_TEMPLATE_ID_GUID            = "00"
-	BOT_ID_MERCHANT_PHONE_NUMBER                     = "01"
-	BOT_ID_MERCHANT_TAX_ID                           = "02"
-	BOT_ID_MERCHANT_EWALLET_ID                       = "03"
-	guidPromptpay                                    = "A000000677010111"
-	transactionCurrencyTHB                           = "764"
-	countryCodeTH                                    = "TH"
+	idPayloadFormat                             = "00"
+	idPOIMethod                                 = "01"
+	idMerchantInformationBOT                    = "29"
+	idTransactionCurrency                       = "53"
+	idTransactionAmount                         = "54"
+	idCountryCode                               = "58"
+	idCRC                                       = "63"
+	payloadFormatEMVQRCPS_MerchantPresentedMode = "01"
+	poiMethodStatic                             = "11"
+	poiMathodDynamic                            = "12"
+	merchantInformationTemplateIDGUID           = "00"
+	botIDMerchantPhoneNumber                    = "01"
+	botIDerchantTaxID                           = "02"
+	botIDMerchantEwalletID                      = "03"
+	guidPromptpay                               = "A000000677010111"
+	transactionCurrencyTHB                      = "764"
+	countryCodeTH                               = "TH"
 )
 
 // Payment is the payment definition
@@ -106,25 +106,25 @@ func (p Payment) String() string {
 	var targetType string
 	switch {
 	case len(target) >= 15:
-		targetType = BOT_ID_MERCHANT_EWALLET_ID
+		targetType = botIDMerchantEwalletID
 	case len(target) >= 13:
-		targetType = BOT_ID_MERCHANT_TAX_ID
+		targetType = botIDerchantTaxID
 	default:
-		targetType = BOT_ID_MERCHANT_PHONE_NUMBER
+		targetType = botIDMerchantPhoneNumber
 	}
 
 	var data []string
-	data = append(data, f(idPayloadFormat, PAYLOAD_FORMAT_EMV_QRCPS_MERCHANT_PRESENTED_MODE))
+	data = append(data, f(idPayloadFormat, payloadFormatEMVQRCPS_MerchantPresentedMode))
 	if p.Amount != 0 {
-		data = append(data, f(idPOIMethod, POI_METHOD_DYNAMIC))
+		data = append(data, f(idPOIMethod, poiMathodDynamic))
 	} else {
-		data = append(data, f(idPOIMethod, POI_METHOD_STATIC))
+		data = append(data, f(idPOIMethod, poiMethodStatic))
 	}
-	merchantInfo := serialize([]string{f(MERCHANT_INFORMATION_TEMPLATE_ID_GUID, guidPromptpay), f(targetType, formatTarget(target))})
+	merchantInfo := serialize([]string{f(merchantInformationTemplateIDGUID, guidPromptpay), f(targetType, formatTarget(target))})
 	data = append(data, f(idMerchantInformationBOT, merchantInfo))
 	data = append(data, f(idCountryCode, countryCodeTH))
 	data = append(data, f(idTransactionCurrency, p.transactionCurrency))
-	data = append(data, f(idPayloadFormat, PAYLOAD_FORMAT_EMV_QRCPS_MERCHANT_PRESENTED_MODE))
+	data = append(data, f(idPayloadFormat, payloadFormatEMVQRCPS_MerchantPresentedMode))
 	if p.Amount != 0 {
 		data = append(data, f(idTransactionAmount, formatAmount(p.Amount)))
 	}
