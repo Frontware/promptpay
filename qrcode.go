@@ -9,6 +9,26 @@ import (
 	"github.com/snksoft/crc"
 )
 
+const (
+	idPayloadFormat                                  = "00"
+	idPOIMethod                                      = "01"
+	idMerchantInformationBOT                         = "29"
+	ID_TRANSACTION_CURRENCY                          = "53"
+	ID_TRANSACTION_AMOUNT                            = "54"
+	ID_COUNTRY_CODE                                  = "58"
+	ID_CRC                                           = "63"
+	PAYLOAD_FORMAT_EMV_QRCPS_MERCHANT_PRESENTED_MODE = "01"
+	POI_METHOD_STATIC                                = "11"
+	POI_METHOD_DYNAMIC                               = "12"
+	MERCHANT_INFORMATION_TEMPLATE_ID_GUID            = "00"
+	BOT_ID_MERCHANT_PHONE_NUMBER                     = "01"
+	BOT_ID_MERCHANT_TAX_ID                           = "02"
+	BOT_ID_MERCHANT_EWALLET_ID                       = "03"
+	GUID_PROMPTPAY                                   = "A000000677010111"
+	TRANSACTION_CURRENCY_THB                         = "764"
+	COUNTRY_CODE_TH                                  = "TH"
+)
+
 // Payment is the payment definition
 type Payment struct {
 	Amount              float32
@@ -19,25 +39,6 @@ type Payment struct {
 	Account             string // Can be tax id, phone number or personal id card
 	Version             string
 }
-
-const idPayloadFormat = "00"
-const ID_POI_METHOD = "01"
-const ID_MERCHANT_INFORMATION_BOT = "29"
-const ID_TRANSACTION_CURRENCY = "53"
-const ID_TRANSACTION_AMOUNT = "54"
-const ID_COUNTRY_CODE = "58"
-const ID_CRC = "63"
-
-const PAYLOAD_FORMAT_EMV_QRCPS_MERCHANT_PRESENTED_MODE = "01"
-const POI_METHOD_STATIC = "11"
-const POI_METHOD_DYNAMIC = "12"
-const MERCHANT_INFORMATION_TEMPLATE_ID_GUID = "00"
-const BOT_ID_MERCHANT_PHONE_NUMBER = "01"
-const BOT_ID_MERCHANT_TAX_ID = "02"
-const BOT_ID_MERCHANT_EWALLET_ID = "03"
-const GUID_PROMPTPAY = "A000000677010111"
-const TRANSACTION_CURRENCY_THB = "764"
-const COUNTRY_CODE_TH = "TH"
 
 // NewPayment initialize new payment struct with default values for THB payment in Thailand
 func NewPayment() (payment Payment) {
@@ -74,6 +75,7 @@ func serialize(xs []string) string {
 	return strings.Join(xs, "")
 }
 
+// sanitizeTarget cleans the target string
 func sanitizeTarget(id string) string {
 	regex := regexp.MustCompile(`[^0-9]`)
 	return regex.ReplaceAllString(id, "")
@@ -114,12 +116,12 @@ func (p Payment) String() string {
 	var data []string
 	data = append(data, f(idPayloadFormat, PAYLOAD_FORMAT_EMV_QRCPS_MERCHANT_PRESENTED_MODE))
 	if p.Amount != 0 {
-		data = append(data, f(ID_POI_METHOD, POI_METHOD_DYNAMIC))
+		data = append(data, f(idPOIMethod, POI_METHOD_DYNAMIC))
 	} else {
-		data = append(data, f(ID_POI_METHOD, POI_METHOD_STATIC))
+		data = append(data, f(idPOIMethod, POI_METHOD_STATIC))
 	}
 	merchantInfo := serialize([]string{f(MERCHANT_INFORMATION_TEMPLATE_ID_GUID, GUID_PROMPTPAY), f(targetType, formatTarget(target))})
-	data = append(data, f(ID_MERCHANT_INFORMATION_BOT, merchantInfo))
+	data = append(data, f(idMerchantInformationBOT, merchantInfo))
 	data = append(data, f(ID_COUNTRY_CODE, COUNTRY_CODE_TH))
 	data = append(data, f(ID_TRANSACTION_CURRENCY, p.transactionCurrency))
 	data = append(data, f(idPayloadFormat, PAYLOAD_FORMAT_EMV_QRCPS_MERCHANT_PRESENTED_MODE))
