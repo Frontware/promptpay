@@ -4,155 +4,175 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 )
 
+// Type type of PromptPay
+type Type int
+
+const (
+	// UNKNOWN unknown PromptPay type
+	UNKNOWN Type = 0
+	// ID tax/card ID
+	ID Type = 1
+	// PHONE mobile/phone
+	PHONE Type = 2
+	// EWALLET E-Wallet
+	EWALLET Type = 3
+
+	idPayLoadFormat       = "00"
+	idPOIMethod           = "01"
+	idMerchantInfo        = "29"
+	idCountryCode         = "58"
+	idTransactionCurrency = "53"
+	idTransactionAmount   = "54"
+	idCRC                 = "63"
+
+	payloadFormat = "01"
+	poiStatic     = "11"
+	poiDynamic    = "12"
+	merchantInfo  = "00"
+	botIDPhone    = "01"
+	botIDTax      = "02"
+	botIDEwallet  = "03"
+	guidPromptPay = "A000000677010111"
+	currencyCode  = "764"
+	phoneCode     = "66"
+	countryCode   = "TH"
+
+	sizeCRC = 4
+)
+
 // PromptPay basic structure accomodating basic information
-// for creating QRCode.
-//
-// EMVco
-//
-// Version number
-// field 00
-// length 02
-// data 01
-//
-// Type of QR Code
-// field 01
-// length 02
-// data 11 -> many use | 12 -> one use
-//
-// Merchant information
-// field 29
-// length 37
-// Application ID (mean of payment)
-//  -sub-field 00
-//  -length 16
-//  data A000000677010111 -> PromptPay
-// Phone number
-//  -sub-field 01
-//  -length 13
-//  -data cut the prefix, phone number is preceded by 00 and country code (66)
-// ID Card
-//  -sub-field 02
-//  -length 13
-//
-// Country Code
-// field 58
-// length 02
-// data "TH" -> "Thailand"
-//
-// Transaction currency
-// field 53
-// length 03
-// data 764 "THB" ISO_4217
-//
-// Transaction amount
-// field 54
-// length up to 13
-//
-// CRC
-// field 63
-// length 04
-// checksum using CRC16 includes all fields including CRC field and length "6304"
 type PromptPay struct {
-	merchant string
-	phone    string
-	amount   float64
-	oneTime  bool
+	PromptPayID string
+	Amount      float64
+	OneTime     bool
+}
+
+func f(id, value string) string {
+	return fmt.Sprintf("%s%02d%s", id, len(value), value)
+}
+
+func formatPhone(value string) string {
+	return fmt.Sprintf("00%s%s", phoneCode, value)
+}
+
+func formatAmount(value float64) string {
+	return fmt.Sprintf("%.2f", value)
+}
+
+func formatCRC(value uint16) string {
+	return fmt.Sprintf("%04X", value)
 }
 
 // Gen returns a string to create a PromptPay QRCode.
 // It uses PromptPay structure to generate a string.
 // Two arguments must be provided in order to be able to generate a string.
-// Either merchant ID and amount or phone number and amount must be provided.
-// If both merchant ID and phone are provided, merchant ID will be used as default
+// PromptPayID and amount must be provided.
 func (p *PromptPay) Gen() (string, error) {
 
 	var buffer bytes.Buffer
+	var merchant bytes.Buffer
 
-	if strings.TrimSpace(p.merchant) == "" && strings.TrimSpace(p.phone) == "" {
-		return "", errors.New("both merchant and phone are empty")
+	if strings.TrimSpace(p.PromptPayID) == "" {
+		return "", errors.New("empty PromptPayID")
 	}
 
-	if p.amount < 0.0 {
+	if p.Amount < 0.0 {
 		return "", errors.New("amount can't be negative")
 	}
 
-	// QRCode specifications
-	if p.oneTime {
-		if _, err := buffer.WriteString("00020101021229370016A000000677010111"); err != nil {
+	// QRCode specification
+	if _, err := buffer.WriteString(f(idPayLoadFormat, payloadFormat)); err != nil {
+		return "", err
+	}
+
+	if !p.OneTime {
+		if _, err := buffer.WriteString(f(idPOIMethod, poiStatic)); err != nil {
 			return "", err
 		}
 	} else {
-		if _, err := buffer.WriteString("00020101021129370016A000000677010111"); err != nil {
+		if _, err := buffer.WriteString(f(idPOIMethod, poiDynamic)); err != nil {
 			return "", err
 		}
 	}
 
 	// merchant information
-	if len(p.merchant) == 13 {
-		if _, err := buffer.WriteString("0213"); err != nil {
+	if _, err := merchant.WriteString(f(merchantInfo, guidPromptPay)); err != nil {
+		return "", err
+	}
+
+	switch p.GetPromptPayType() {
+	case ID:
+		if _, err := merchant.WriteString(f(botIDTax, p.PromptPayID)); err != nil {
 			return "", err
 		}
-		if _, err := buffer.WriteString(p.merchant); err != nil {
+	case PHONE:
+		if _, err := merchant.WriteString(f(botIDPhone, formatPhone(p.PromptPayID))); err != nil {
 			return "", err
 		}
-	} else if (len(p.phone) == 9 && p.phone[0] != '0') ||
-		(len(p.phone) == 10 && p.phone[0] == '0' && p.phone[1] != '0') ||
-		(len(p.phone) == 11 && p.phone[0:2] == "66" && p.phone[2] != '0') {
-		if _, err := buffer.WriteString("01130066"); err != nil {
+	case EWALLET:
+		if _, err := merchant.WriteString(f(botIDEwallet, p.PromptPayID)); err != nil {
 			return "", err
 		}
-		if len(p.phone) == 9 {
-			if _, err := buffer.WriteString(p.phone); err != nil {
-				return "", err
-			}
-		} else if len(p.phone) == 10 {
-			if _, err := buffer.WriteString(p.phone[1:]); err != nil {
-				return "", err
-			}
-		} else {
-			if _, err := buffer.WriteString(p.phone[2:]); err != nil {
-				return "", err
-			}
-		}
-	} else {
+	default:
 		return "", errors.New("invalid merchant information")
 	}
 
+	// write merchant information to buffer
+	if _, err := buffer.WriteString(f(idMerchantInfo, merchant.String())); err != nil {
+		return "", err
+	}
+
 	// transaction type
-	if _, err := buffer.WriteString("5802TH5303764"); err != nil {
+	if _, err := buffer.WriteString(f(idCountryCode, countryCode)); err != nil {
+		return "", err
+	}
+	if _, err := buffer.WriteString(f(idTransactionCurrency, currencyCode)); err != nil {
 		return "", err
 	}
 
 	// transaction amount
-	if p.amount > 0.0 {
-		amountStr := fmt.Sprintf("%.1f", p.amount)
-		if math.Mod(p.amount*100.0, 10.0) != 0.0 {
-			amountStr = fmt.Sprintf("%.2f", p.amount)
-		}
-		if _, err := buffer.WriteString("54"); err != nil {
-			return "", err
-		}
-		if _, err := buffer.WriteString(fmt.Sprintf("%02d", len(amountStr))); err != nil {
-			return "", err
-		}
-		if _, err := buffer.WriteString(amountStr); err != nil {
+	if p.Amount > 0.0 {
+		amountStr := formatAmount(p.Amount)
+		if _, err := buffer.WriteString(f(idTransactionAmount, amountStr)); err != nil {
 			return "", err
 		}
 	}
 
-	// Checksum CRC16
-	if _, err := buffer.WriteString("6304"); err != nil {
+	// CRC field
+	if _, err := buffer.WriteString(fmt.Sprintf("%s%02d", idCRC, sizeCRC)); err != nil {
 		return "", err
 	}
-	// Generate hash
-	hash := Checksum(XModemRev, buffer.Bytes())
-	if _, err := buffer.WriteString(fmt.Sprintf("%X", hash)); err != nil {
+
+	// Generate CRC16 checksum
+	crc := Checksum(XModemRev, buffer.Bytes())
+	if _, err := buffer.WriteString(formatCRC(crc)); err != nil {
 		return "", err
 	}
 
 	return buffer.String(), nil
+}
+
+// GetPromptPayType returns PromptPayType.
+// Check whether the PromptPayID is and ID or a phone.
+func (p *PromptPay) GetPromptPayType() Type {
+	// Tax/Card ID
+	if len(p.PromptPayID) == 13 {
+		return ID
+	}
+	// Phone or mobile
+	if (len(p.PromptPayID) == 9) && p.PromptPayID[0] != '0' ||
+		(len(p.PromptPayID) == 10 && p.PromptPayID[0] == '0' && p.PromptPayID[1] != '0') ||
+		(len(p.PromptPayID) == 11 && p.PromptPayID[0:2] == phoneCode && p.PromptPayID[2] != '0') {
+		bound := len(p.PromptPayID) - 9
+		if bound > 0 {
+			p.PromptPayID = p.PromptPayID[bound:]
+		}
+		return PHONE
+	}
+	// TODO: implement for E-wallet
+
+	return UNKNOWN
 }

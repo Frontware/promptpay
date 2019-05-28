@@ -19,18 +19,23 @@ Golang API to generate QRCode
 ## Example
 
 ```golang
+package main
 
-import pp "github.com/Frontware/promptpay"
+import (
+	"fmt"
+
+	pp "github.com/Frontware/promptpay"
+)
 
 func main() {
-    // Default values are Thailand and THB
-    myPayment := pp.NewPayment()
-    myPayment.Amount = 45.10 // THB
-    // Set a tax ID, can be phone number or thai citizen ID
-    myPayment.Account = "0105540087061" 
-    qrcode := myPayment.String()
-    fmt.Println("QRCode string ", qrcode)
+	payment := pp.PromptPay{
+		PromptPayID: "0105540087061", // Tax-ID/ID Card/E-Wallet
+		Amount:      100.55,          // Positive amount
+	}
 
+	qrcode, _ := payment.Gen() // Generate string to be use in QRCode
+	fmt.Println(qrcode)        // Print string
+}
 ```
 
 ## Documentation
