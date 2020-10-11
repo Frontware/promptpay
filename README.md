@@ -1,3 +1,5 @@
+<img src="https://www.frontware.com/images/img/fw-logo.png" alt="Frontware" width="120"/>
+
 ![logo](https://vgy.me/i0c6tm.jpg)
 
 # PromptPay
@@ -37,6 +39,9 @@ func main() {
 	fmt.Println(qrcode)        // Print string
 }
 ```
+
+[Try it on Go playground](https://play.golang.org/p/9EneQrObJ6T)
+
 
 ## Documentation
 
