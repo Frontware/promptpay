@@ -47,7 +47,7 @@ func main() {
 
 ### API
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/frontware/frontware)](https://pkg.go.dev/github.com/frontware/frontware)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/frontware/frontware)](https://pkg.go.dev/github.com/frontware/promptpay)
 
 ### Specifications
 
