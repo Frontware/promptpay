@@ -1,10 +1,10 @@
 <img src="https://www.frontware.com/images/img/fw-logo.png" alt="Frontware" width="120"/>
 
-![logo](https://vgy.me/i0c6tm.jpg)
-
 # PromptPay
 
 Generate QRCode for Thai PromptPay
+
+![logo](https://vgy.me/i0c6tm.jpg)
 
 Golang API to generate QRCode
 
