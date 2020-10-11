@@ -47,11 +47,11 @@ func main() {
 
 ### API
 
-[![GoDoc](https://godoc.org/github.com/Frontware/promptpay?status.svg)](https://godoc.org/github.com/Frontware/promptpay)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/frontware/frontware)](https://pkg.go.dev/github.com/frontware/frontware)
 
 ### Specifications
 
 EMV QR Code specification: https://www.emvco.com/wp-content/plugins/pmpro-customizations/oy-getfile.php?u=/wp-content/uploads/documents/EMVCo-Consumer-Presented-QR-Specification-v1.pdf
 
 -----------------------------------------------
-<sup>© 2018 Frontware International. All Rights Reserved.</sup>
+<sup>© 2020 Frontware International. All Rights Reserved.</sup>
